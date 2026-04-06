@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analyse des Genres - Dashboard 2016-2026</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="style.css" rel="stylesheet">
+</head>
+<body>
+
+<div class="container-fluid py-4">
+    <header class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+        <h1 class="h3">Dashboard : Analyse des Genres</h1>
+        <div class="d-flex align-items-center gap-2">
+            <a href="info.html" class="btn btn-sm btn-outline-secondary">Accueil</a>
+            <div class="badge bg-dark p-2">DataViz Project | BTS 2026</div>
+        </div>
+    </header>
+
+    <!-- Sélecteur de vue -->
+    <div class="mb-4 d-flex gap-2">
+        <button class="btn btn-primary" id="btn-films" onclick="showChart('films')">Films</button>
+        <button class="btn btn-outline-danger" id="btn-animes" onclick="showChart('animes')">Animés</button>
+        <button class="btn btn-outline-secondary" id="btn-compare" onclick="showChart('compare')">Comparaison Top 10</button>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card p-4">
+                <h5 class="card-title mb-3" id="chart-title">Distribution des genres - Films</h5>
+                <div style="position: relative; height: 480px;">
+                    <canvas id="genreChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let chartInstance = null;
+let globalData = null;
+
+async function loadData() {
+    const response = await fetch('../data/data_format/categories.json');
+    if (!response.ok) throw new Error("Fichier categories.json introuvable. Lance d'abord le pipeline Python.");
+    return await response.json();
+}
+
+function buildChart(labels, datasets, title) {
+    const ctx = document.getElementById('genreChart').getContext('2d');
+
+    if (chartInstance) chartInstance.destroy();
+
+    document.getElementById('chart-title').textContent = title;
+
+    chartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: { labels, datasets },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    labels: { color: '#28200f', font: { size: 13 } }
+                },
+                tooltip: {
+                    backgroundColor: '#faf7f2',
+                    titleColor: '#28200f',
+                    bodyColor: '#8a7960',
+                    borderColor: '#d8cfc0',
+                    borderWidth: 1,
+                    callbacks: {
+                        label: ctx => ` ${ctx.parsed.x} occurrences`
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: { color: '#8a7960' },
+                    grid: { color: 'rgba(40,32,15,0.07)' }
+                },
+                y: {
+                    ticks: { color: '#28200f', font: { size: 12 } },
+                    grid: { display: false }
+                }
+            }
+        }
+    });
+}
+
+function showChart(mode) {
+    // Mise à jour boutons
+    document.getElementById('btn-films').className   = 'btn btn-outline-primary';
+    document.getElementById('btn-animes').className  = 'btn btn-outline-danger';
+    document.getElementById('btn-compare').className = 'btn btn-outline-secondary';
+
+    if (mode === 'films') {
+        document.getElementById('btn-films').className = 'btn btn-primary';
+        const top = globalData.films.slice(0, 15);
+        buildChart(
+            top.map(d => d.genre),
+            [{ label: 'Films', data: top.map(d => d.count), backgroundColor: '#3d6e9e', borderRadius: 4 }],
+            'Distribution des genres — Films (Top 15)'
+        );
+    } else if (mode === 'animes') {
+        document.getElementById('btn-animes').className = 'btn btn-danger';
+        const top = globalData.animes.slice(0, 15);
+        buildChart(
+            top.map(d => d.genre),
+            [{ label: 'Animés', data: top.map(d => d.count), backgroundColor: '#9e3d2d', borderRadius: 4 }],
+            'Distribution des genres — Animés (Top 15)'
+        );
+    } else if (mode === 'compare') {
+        document.getElementById('btn-compare').className = 'btn btn-secondary';
+
+        // Fusion des top 10 genres de chaque catégorie
+        const filmsTop   = globalData.films.slice(0, 10);
+        const animesTop  = globalData.animes.slice(0, 10);
+        const allGenres  = [...new Set([...filmsTop.map(d => d.genre), ...animesTop.map(d => d.genre)])];
+
+        const filmsMap  = Object.fromEntries(globalData.films.map(d  => [d.genre, d.count]));
+        const animesMap = Object.fromEntries(globalData.animes.map(d => [d.genre, d.count]));
+
+        buildChart(
+            allGenres,
+            [
+                { label: 'Films',  data: allGenres.map(g => filmsMap[g]  || 0), backgroundColor: '#3d6e9e', borderRadius: 4 },
+                { label: 'Animés', data: allGenres.map(g => animesMap[g] || 0), backgroundColor: '#9e3d2d', borderRadius: 4 }
+            ],
+            'Comparaison Films vs Animés — Top genres'
+        );
+    }
+}
+
+// Initialisation
+loadData()
+    .then(data => {
+        globalData = data;
+        showChart('films');
+    })
+    .catch(err => {
+        document.body.innerHTML += `<div class="alert alert-danger m-4">${err.message}</div>`;
+    });
+</script>
+
+</body>
+</html>

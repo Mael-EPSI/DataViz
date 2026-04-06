@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comparaison Films vs Animés — Dashboard 2016-2026</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="style.css" rel="stylesheet">
+
+    <style>
+        /* Grille versus — layout uniquement */
+        .versus-grid {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 0;
+            align-items: center;
+        }
+        canvas { max-height: 400px; }
+
+    </style>
+</head>
+<body>
+
+<div class="container-fluid py-4">
+    <header class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+        <h1 class="h3">Comparaison globale : Films vs Animés</h1>
+        <div>
+            <a href="info.html" class="btn btn-sm btn-outline-secondary me-1">Accueil</a>
+            <div class="badge bg-dark p-2">DataViz Project | BTS 2026</div>
+        </div>
+    </header>
+
+    <!-- LIGNE 1 : KPIs face à face + Donut -->
+    <div class="row g-4 mb-4">
+
+        <!-- KPIs -->
+        <div class="col-lg-7">
+            <div class="card p-4 h-100">
+                <h5 class="mb-4">Indicateurs clés</h5>
+                <div class="versus-grid">
+
+                    <!-- GAUCHE : Films -->
+                    <div>
+                        <div class="text-center mb-3">
+                            <span class="badge bg-primary fs-6">Films</span>
+                        </div>
+                        <div class="kpi-block text-end">
+                            <div class="label">Titres analysés</div>
+                            <div class="val val-film" id="f-count">—</div>
+                        </div>
+                        <div class="kpi-block text-end">
+                            <div class="label">Note moyenne</div>
+                            <div class="val val-film" id="f-note">—</div>
+                            <div class="sub" id="f-note-badge"></div>
+                        </div>
+                        <div class="kpi-block text-end">
+                            <div class="label">Votes moyens / titre</div>
+                            <div class="val val-film" id="f-votes">—</div>
+                        </div>
+                        <div class="kpi-block text-end">
+                            <div class="label">Genres distincts</div>
+                            <div class="val val-film" id="f-genres">—</div>
+                        </div>
+                        <div class="kpi-block text-end">
+                            <div class="label">Pays de production</div>
+                            <div class="val val-film" id="f-regions">—</div>
+                        </div>
+                    </div>
+
+                    <div class="vs-label">VS</div>
+
+                    <!-- DROITE : Animés -->
+                    <div>
+                        <div class="text-center mb-3">
+                            <span class="badge bg-danger fs-6">Animés</span>
+                        </div>
+                        <div class="kpi-block">
+                            <div class="label">Titres analysés</div>
+                            <div class="val val-anime" id="a-count">—</div>
+                        </div>
+                        <div class="kpi-block">
+                            <div class="label">Note moyenne</div>
+                            <div class="val val-anime" id="a-note">—</div>
+                            <div class="sub" id="a-note-badge"></div>
+                        </div>
+                        <div class="kpi-block">
+                            <div class="label">Votes moyens / titre</div>
+                            <div class="val val-anime" id="a-votes">—</div>
+                        </div>
+                        <div class="kpi-block">
+                            <div class="label">Genres distincts</div>
+                            <div class="val val-anime" id="a-genres">—</div>
+                        </div>
+                        <div class="kpi-block">
+                            <div class="label">Pays de production</div>
+                            <div class="val val-anime" id="a-regions">—</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Donut : proportion dans le dataset -->
+        <div class="col-lg-5">
+            <div class="card p-4 h-100 d-flex flex-column">
+                <h5 class="mb-3">Répartition dans le dataset</h5>
+                <div class="flex-grow-1 d-flex align-items-center justify-content-center">
+                    <canvas id="donutChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LIGNE 2 : Radar -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-6">
+            <div class="card p-4 h-100">
+                <h5 class="mb-3">Profil comparatif (Radar)</h5>
+                <p class="text-muted" style="font-size:.82rem;">Chaque axe est normalisé sur [0–10] relativement au meilleur des deux.</p>
+                <canvas id="radarChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Conclusion -->
+        <div class="col-lg-6 d-flex flex-column gap-3">
+            <div class="card p-4 flex-grow-1">
+                <h5 class="mb-3">Quelle est la place des animés ?</h5>
+                <div class="conclusion-box" id="conclusion-text">
+                    Chargement des données...
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+async function loadData() {
+    const res = await fetch('../data/data_format/comparaison.json');
+    if (!res.ok) throw new Error("Fichier comparaison.json introuvable. Lance d'abord le pipeline Python.");
+    return await res.json();
+}
+
+function winner(fVal, aVal, higherIsBetter = true) {
+    if (higherIsBetter) return fVal >= aVal ? 'film' : 'anime';
+    return fVal <= aVal ? 'film' : 'anime';
+}
+
+function badge(w) {
+    return w === 'film'
+        ? '<span class="winner-badge badge-film">✦ Meilleur</span>'
+        : '<span class="winner-badge badge-anime">✦ Meilleur</span>';
+}
+
+function fillKPIs(d) {
+    const f = d.films, a = d.animes;
+
+    document.getElementById('f-count').textContent   = f.count.toLocaleString('fr-FR');
+    document.getElementById('a-count').textContent   = a.count.toLocaleString('fr-FR');
+
+    const wNote = winner(f.note_moy, a.note_moy);
+    document.getElementById('f-note').innerHTML = f.note_moy + ' / 10' + (wNote === 'film'  ? badge('film')  : '');
+    document.getElementById('a-note').innerHTML = a.note_moy + ' / 10' + (wNote === 'anime' ? badge('anime') : '');
+
+    const wVotes = winner(f.votes_moy, a.votes_moy);
+    document.getElementById('f-votes').innerHTML = Math.round(f.votes_moy).toLocaleString('fr-FR') + (wVotes === 'film'  ? badge('film')  : '');
+    document.getElementById('a-votes').innerHTML = Math.round(a.votes_moy).toLocaleString('fr-FR') + (wVotes === 'anime' ? badge('anime') : '');
+
+    const wGenres = winner(f.nb_genres, a.nb_genres);
+    document.getElementById('f-genres').innerHTML = f.nb_genres + (wGenres === 'film'  ? badge('film')  : '');
+    document.getElementById('a-genres').innerHTML = a.nb_genres + (wGenres === 'anime' ? badge('anime') : '');
+
+    const wRegions = winner(f.nb_regions, a.nb_regions);
+    document.getElementById('f-regions').innerHTML = f.nb_regions + (wRegions === 'film'  ? badge('film')  : '');
+    document.getElementById('a-regions').innerHTML = a.nb_regions + (wRegions === 'anime' ? badge('anime') : '');
+}
+
+function buildDonut(d) {
+    const total = d.films.count + d.animes.count;
+    const pctF  = Math.round(d.films.count  / total * 100);
+    const pctA  = Math.round(d.animes.count / total * 100);
+
+    new Chart(document.getElementById('donutChart').getContext('2d'), {
+        type: 'doughnut',
+        data: {
+            labels: [`Films (${pctF}%)`, `Animés (${pctA}%)`],
+            datasets: [{
+                data: [d.films.count, d.animes.count],
+                backgroundColor: ['#0078d4', '#e50914'],
+                borderWidth: 0,
+                hoverOffset: 8
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom', labels: { color: '#28200f', font: { size: 13 }, padding: 16 } },
+                tooltip: {
+                    backgroundColor: '#faf7f2',
+                    bodyColor: '#28200f',
+                    borderColor: '#d8cfc0',
+                    borderWidth: 1,
+                    callbacks: { label: ctx => ` ${ctx.parsed.toLocaleString('fr-FR')} titres` }
+                }
+            }
+        }
+    });
+}
+
+function buildRadar(d) {
+    new Chart(document.getElementById('radarChart').getContext('2d'), {
+        type: 'radar',
+        data: {
+            labels: d.radar_labels,
+            datasets: [
+                {
+                    label: 'Films',
+                    data: d.films.radar,
+                    borderColor: '#3d6e9e',
+                    backgroundColor: 'rgba(61,110,158,0.15)',
+                    borderWidth: 2,
+                    pointBackgroundColor: '#3d6e9e',
+                    pointRadius: 4
+                },
+                {
+                    label: 'Animés',
+                    data: d.animes.radar,
+                    borderColor: '#9e3d2d',
+                    backgroundColor: 'rgba(158,61,45,0.15)',
+                    borderWidth: 2,
+                    pointBackgroundColor: '#9e3d2d',
+                    pointRadius: 4
+                }
+            ]
+        },
+        options: {
+            maintainAspectRatio: false,
+            scales: {
+                r: {
+                    min: 0, max: 10,
+                    ticks: { display: false, stepSize: 2 },
+                    grid:        { color: 'rgba(40,32,15,0.08)' },
+                    angleLines:  { color: 'rgba(40,32,15,0.08)' },
+                    pointLabels: { color: '#8a7960', font: { size: 12 } }
+                }
+            },
+            plugins: {
+                legend: { labels: { color: '#28200f', font: { size: 13 } } }
+            }
+        }
+    });
+}
+
+function buildConclusion(d) {
+    const f = d.films, a = d.animes;
+    const total  = f.count + a.count;
+    const pctA   = Math.round(a.count / total * 100);
+    const noteDiff = (a.note_moy - f.note_moy).toFixed(2);
+    const noteWinner = noteDiff > 0 ? 'Les animés obtiennent une meilleure note moyenne' : noteDiff < 0 ? 'Les films obtiennent une meilleure note moyenne' : 'La note moyenne est identique';
+    const geoComp = a.nb_regions < f.nb_regions
+        ? `Les films couvrent <strong>${f.nb_regions}</strong> pays de production contre seulement <strong>${a.nb_regions}</strong> pour les animés, confirmant leur domination géographique.`
+        : `Les animés couvrent autant de pays de production que les films.`;
+
+    document.getElementById('conclusion-text').innerHTML = `
+        Sur les ~<strong>${total.toLocaleString('fr-FR')}</strong> œuvres analysées entre 2016 et 2026,
+        les animés représentent <strong>${pctA}%</strong> du corpus étudié, un volume comparable aux films.<br><br>
+        <strong>${noteWinner}</strong> (${a.note_moy} vs ${f.note_moy} / 10, soit ${Math.abs(noteDiff)} point d'écart),
+        ce qui suggère que les animés sont <em>perçus aussi positivement</em> que les productions cinématographiques
+        classiques par leurs audiences.<br><br>
+        En revanche, les films génèrent en moyenne
+        <strong>${Math.round(f.votes_moy).toLocaleString('fr-FR')} votes / titre</strong> contre
+        <strong>${Math.round(a.votes_moy).toLocaleString('fr-FR')}</strong> pour les animés, traduisant
+        une audience <em>plus large mais moins concentrée</em> pour le cinéma.<br><br>
+        ${geoComp}<br><br>
+        <strong>Conclusion :</strong> Les animés occupent une place <em>significative et qualitative</em>
+        dans le paysage audiovisuel mondial, avec une audience fidèle et des notes élevées,
+        mais restent un marché plus niché que le cinéma traditionnel.
+    `;
+}
+
+loadData()
+    .then(data => {
+        fillKPIs(data);
+        buildDonut(data);
+        buildRadar(data);
+        buildConclusion(data);
+    })
+    .catch(err => {
+        document.body.innerHTML += `<div class="alert alert-danger m-4">${err.message}</div>`;
+    });
+</script>
+
+</body>
+</html>

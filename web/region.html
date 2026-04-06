@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analyse Géographique - Dashboard 2016-2026</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="style.css" rel="stylesheet">
+</head>
+<body>
+
+<div class="container-fluid py-4">
+    <header class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+        <h1 class="h3">Dashboard : Analyse Géographique</h1>
+        <div class="d-flex align-items-center gap-2">
+            <a href="info.html" class="btn btn-sm btn-outline-secondary">Accueil</a>
+            <div class="badge bg-dark p-2">DataViz Project | BTS 2026</div>
+        </div>
+    </header>
+
+    <div class="row">
+        <div class="col-lg-8 mb-4">
+            <div class="card p-3 h-100">
+                <h5 class="card-title mb-3">Bubble Map : Densité de Production Mondiale</h5>
+                <div id="map"></div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 mb-4">
+            <div class="card p-3 h-100">
+                <h5 class="card-title mb-3">Part de Marché / Région</h5>
+                <div class="d-flex justify-content-center align-items-center h-100">
+                    <canvas id="regionChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card p-3">
+                <h5 class="card-title mb-3">Détails par pays</h5>
+
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+                    <span class="text-muted small me-1">Région :</span>
+                    <div id="region-filters" class="d-flex flex-wrap gap-1"></div>
+                </div>
+
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+                    <span class="text-muted small me-1">Type :</span>
+                    <div class="d-flex gap-1" id="type-filters">
+                        <button class="btn btn-sm filter-btn active" data-type="tous">Tous</button>
+                        <button class="btn btn-sm filter-btn" data-type="Film">Films</button>
+                        <button class="btn btn-sm filter-btn" data-type="Animé">Animés</button>
+                    </div>
+                </div>
+
+                <div class="text-muted small mb-2" id="count-label"></div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Titre</th>
+                                <th>Année</th>
+                                <th>Note</th>
+                                <th>Région</th>
+                                <th>Type</th>
+                            </tr>
+                        </thead>
+                        <tbody id="data-table"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// 1. Dictionnaire des coordonnées GPS (Référentiel Géographique)
+const countryCoords = {
+    "JP": [36.2048, 138.2529], "US": [37.0902, -95.7129], "FR": [46.2276, 2.2137],
+    "RU": [61.5240, 105.3188], "KR": [35.9078, 127.7669], "GB": [55.3781, -3.4360],
+    "CA": [56.1304, -106.3468], "DE": [51.1657, 10.4515], "ES": [40.4637, -3.7492],
+    "IT": [41.8719, 12.5674], "CN": [35.8617, 104.1954], "IN": [20.5937, 78.9629],
+    "AU": [-25.2744, 133.7751], "BR": [-14.2350, -51.9253], "MX": [23.6345, -102.5528]
+};
+
+async function initDashboard() {
+    try {
+        // Chargement du JSON fusionné
+        const response = await fetch('../data/data_format/map_data.json');
+        const data = await response.json();
+
+        // --- A. INITIALISATION DE LA CARTE (LIGHT MODE) ---
+        const map = L.map('map').setView([25, 10], 2);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        // --- B. CALCUL DES STATISTIQUES PAR PAYS ---
+        const stats = {};
+        data.forEach(item => {
+            const reg = item.region || "Inconnu";
+            if (!stats[reg]) {
+                stats[reg] = { 
+                    total: 0, 
+                    countFilm: 0, 
+                    countAnime: 0 
+                };
+            }
+            stats[reg].total++;
+            if (item.type_media === "Film") stats[reg].countFilm++;
+            else if (item.type_media === "Animé") stats[reg].countAnime++;
+        });
+
+        // --- C. CRÉATION DES BULLES SUR LA CARTE ---
+        Object.keys(stats).forEach(code => {
+            const coords = countryCoords[code];
+            if (coords) {
+                const s = stats[code];
+                
+                // Couleur : Rouge si majorité d'animés, sinon Bleu
+                const isMainlyAnime = s.countAnime > s.countFilm;
+                const mainColor = isMainlyAnime ? "#e50914" : "#0078d4";
+                
+                // Taille de la bulle (Rayon)
+                const radius = Math.sqrt(s.total) * 28000;
+
+                // Construction du Popup détaillé
+                let popupContent = `
+                    <div style="font-family: sans-serif; min-width: 120px;">
+                        <b style="font-size: 14px;">Pays : ${code}</b><hr style="margin: 5px 0">
+                `;
+                
+                if (s.countFilm > 0) {
+                    popupContent += `<span style="color:#0078d4">Films : <b>${s.countFilm}</b></span><br>`;
+                }
+                if (s.countAnime > 0) {
+                    popupContent += `<span style="color:#e50914">Animés : <b>${s.countAnime}</b></span><br>`;
+                }
+                
+                popupContent += `
+                        <hr style="margin: 5px 0">
+                        <b style="color:#28200f">Total : ${s.total}</b>
+                    </div>
+                `;
+
+                L.circle(coords, {
+                    color: mainColor,
+                    fillColor: mainColor,
+                    fillOpacity: 0.5,
+                    weight: 2,
+                    radius: radius
+                }).addTo(map).bindPopup(popupContent);
+            }
+        });
+
+        // --- D. GRAPHIQUE CIRCULAIRE (CHART.JS) ---
+        const ctx = document.getElementById('regionChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(stats),
+                datasets: [{
+                    data: Object.values(stats).map(s => s.total),
+                    backgroundColor: ['#e50914', '#0078d4', '#f1c40f', '#2ecc71', '#9b59b6', '#34495e'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { color: '#28200f', font: { size: 10 } } }
+                }
+            }
+        });
+
+        // --- E. FILTRES ET TABLEAU ---
+        let activeRegion = 'tous';
+        let activeType   = 'tous';
+
+        // Générer les boutons de région dynamiquement
+        const regions = ['tous', ...Object.keys(stats).sort()];
+        const regionContainer = document.getElementById('region-filters');
+        regions.forEach(code => {
+            const btn = document.createElement('button');
+            btn.className = 'btn btn-sm filter-btn' + (code === 'tous' ? ' active' : '');
+            btn.dataset.region = code;
+            btn.textContent = code === 'tous' ? 'Tous' : code;
+            btn.addEventListener('click', () => {
+                activeRegion = code;
+                regionContainer.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                renderTable();
+            });
+            regionContainer.appendChild(btn);
+        });
+
+        // Boutons type
+        document.getElementById('type-filters').querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                activeType = btn.dataset.type;
+                document.getElementById('type-filters').querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                renderTable();
+            });
+        });
+
+        function renderTable() {
+            const filtered = data.filter(item => {
+                const matchRegion = activeRegion === 'tous' || item.region === activeRegion;
+                const matchType   = activeType   === 'tous' || item.type_media === activeType;
+                return matchRegion && matchType;
+            });
+
+            document.getElementById('count-label').textContent = `${filtered.length} résultat${filtered.length > 1 ? 's' : ''}`;
+
+            const tbody = document.getElementById('data-table');
+            tbody.innerHTML = '';
+            filtered.sort((a, b) => (b.note || 0) - (a.note || 0)).slice(0, 200).forEach(item => {
+                const isAnime    = item.type_media === "Animé";
+                const badgeClass = isAnime ? "bg-danger" : "bg-primary";
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${item.titre}</td>
+                        <td>${item.annee}</td>
+                        <td class="fw-bold">${item.note}</td>
+                        <td><span class="badge bg-secondary">${item.region}</span></td>
+                        <td><span class="badge ${badgeClass}">${item.type_media}</span></td>
+                    </tr>`;
+            });
+        }
+
+        renderTable();
+
+    } catch (error) {
+        console.error("Erreur lors de l'initialisation du Dashboard :", error);
+    }
+}
+
+// Lancement de la fonction principale
+initDashboard();
+</script>
+
+</body>
+</html>
