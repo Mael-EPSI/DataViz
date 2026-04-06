@@ -63,7 +63,7 @@ def normaliser_radar(films_val, animes_val):
     return round(films_val / vmax * 10, 2), round(animes_val / vmax * 10, 2)
 
 def lancer_formatage():
-    print("🔧 Calcul des statistiques comparatives globales...")
+    print(" Calcul des statistiques comparatives globales...")
 
     films  = charger_tout(FILE_MOVIES)
     animes = charger_tout(FILE_ANIME)

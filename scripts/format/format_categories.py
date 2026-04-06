@@ -40,7 +40,7 @@ def normaliser_genre_anime(genre):
     return GENRE_EN_TO_FR.get(genre, genre)
 
 def lancer_formatage():
-    print("🔧 Comptage des genres pour le Dashboard...")
+    print(" Comptage des genres pour le Dashboard...")
 
     films_genres = {}
     animes_genres = {}

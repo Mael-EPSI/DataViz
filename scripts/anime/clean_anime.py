@@ -32,7 +32,7 @@ def charger_donnees_anilist():
     return jikan_data
 
 def lancer_nettoyage():
-    print(f"🧹 Nettoyage des ANIMÉS (Qualité + Limite {LIMIT_ANIME})...")
+    print(f" Nettoyage des ANIMÉS (Qualité + Limite {LIMIT_ANIME})...")
     
     jikan_list = charger_donnees_anilist()
     all_valid_anime = []

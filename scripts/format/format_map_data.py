@@ -13,7 +13,7 @@ OUTPUT_FILE = os.path.join(DATA_FORMAT_DIR, "map_data.json")
 os.makedirs(DATA_FORMAT_DIR, exist_ok=True)
 
 def lancer_formatage():
-    print("🔧 Formatage des données pour le Dashboard Web...")
+    print(" Formatage des données pour le Dashboard Web...")
     final_data = []
 
     # 1. Traitement des FILMS

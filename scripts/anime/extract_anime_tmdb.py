@@ -51,12 +51,12 @@ def fetch_details(m_type, item_id):
             return clean_anime_data(res.json(), m_type)
         elif res.status_code == 429: # Gestion du Rate Limit
             retry_after = int(res.headers.get("Retry-After", 5))
-            print(f"   ⚠️ Limite API atteinte. Pause de {retry_after}s...")
+            print(f"   Limite API atteinte. Pause de {retry_after}s...")
             time.sleep(retry_after)
             return fetch_details(m_type, item_id)
         return None
     except Exception as e:
-        print(f"   💥 Erreur détails ID {item_id}: {e}")
+        print(f"   Erreur details ID {item_id}: {e}")
         return None
 
 def run():
@@ -87,7 +87,7 @@ def run():
                 
                 results = resp.json().get('results', [])
                 if not results:
-                    print(f"🏁 Plus de résultats pour {m_type} à la page {page}.")
+                    print(f"Plus de resultats pour {m_type} a la page {page}.")
                     break
 
                 with open(FILENAME, 'a', encoding='utf-8') as f:

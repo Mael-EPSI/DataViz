@@ -75,7 +75,7 @@ def calculer_score(note_moy, pop_norm):
     return scores
 
 def lancer_formatage():
-    print("🔧 Calcul de l'évolution temporelle (2016-2026)...")
+    print(" Calcul de l'évolution temporelle (2016-2026)...")
 
     # --- Films (popularite = score TMDB) ---
     films_per_year = charger_elements(FILE_MOVIES, 'popularite')
