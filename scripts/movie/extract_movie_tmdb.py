@@ -50,7 +50,7 @@ def fetch_details(media_type, item_id):
                 return res.json()
             elif res.status_code == 429: # Rate Limit
                 retry_after = int(res.headers.get("Retry-After", 5))
-                print(f"   ⚠️ Limite API. Pause de {retry_after}s...")
+                print(f"Limite API. Pause de {retry_after}s...")
                 time.sleep(retry_after)
                 continue
             else:
@@ -61,9 +61,9 @@ def fetch_details(media_type, item_id):
 
 def run():
     processed_ids = get_already_processed_ids()
-    print(f"🚀 Démarrage Extraction Films (Mode Deep Scraping)")
-    print(f"📊 Déjà extraits : {len(processed_ids)} items.")
-    print(f"📂 Destination : {FILENAME}")
+    print(f"Démarrage Extraction Films (Mode Deep Scraping)")
+    print(f"Déjà extraits : {len(processed_ids)} items.")
+    print(f"Destination : {FILENAME}")
 
     # Pour ce script on ne traite que les 'movie'
     m_type = 'movie'
@@ -107,11 +107,11 @@ def run():
                     time.sleep(0.1) # Stabilité
 
         except Exception as e:
-            print(f"💥 Erreur page {page}: {e}")
+            print(f"Erreur page {page}: {e}")
             time.sleep(5)
 
 if __name__ == "__main__":
     try:
         run()
     except KeyboardInterrupt:
-        print("\n🛑 Interrompu. Les données sont sauvegardées.")
+        print("\nInterrompu. Les données sont sauvegardées.")

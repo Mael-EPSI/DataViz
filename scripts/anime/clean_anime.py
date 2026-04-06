@@ -39,7 +39,7 @@ def lancer_nettoyage():
     count_discarded = 0
 
     if not os.path.exists(FILE_TMDB):
-        print(f"❌ Fichier source introuvable : {FILE_TMDB}")
+        print(f"Fichier source introuvable : {FILE_TMDB}")
         return
 
     with open(FILE_ERRORS, 'w', encoding='utf-8') as f_err:
@@ -109,8 +109,8 @@ def lancer_nettoyage():
         for anime in limited_anime:
             f_out.write(json.dumps(anime, ensure_ascii=False) + "\n")
 
-    print(f"✅ Animés validés et limités : {len(limited_anime)}")
-    print(f"❌ Animés écartés (erreurs/qualité) : {count_discarded}")
+    print(f"Animés validés et limités : {len(limited_anime)}")
+    print(f"Animés écartés (erreurs/qualité) : {count_discarded}")
 
 if __name__ == "__main__":
     lancer_nettoyage()

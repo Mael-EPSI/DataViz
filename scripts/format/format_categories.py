@@ -56,7 +56,7 @@ def lancer_formatage():
                             films_genres[genre] = films_genres.get(genre, 0) + 1
                 except Exception:
                     continue
-        print(f"✅ Genres films comptés.")
+        print(f"Genres films comptés.")
 
     # 2. Comptage des genres des ANIMÉS (champ : "genres_list" → liste de dicts ou strings)
     # Les genres composés comme "Action & Adventure" sont découpés en genres individuels
@@ -76,7 +76,7 @@ def lancer_formatage():
                                 animes_genres[genre] = animes_genres.get(genre, 0) + 1
                 except Exception:
                     continue
-        print(f"✅ Genres animés comptés.")
+        print(f"Genres animés comptés.")
 
     # 3. Tri par fréquence décroissante
     films_sorted  = sorted(films_genres.items(),  key=lambda x: x[1], reverse=True)
@@ -91,8 +91,8 @@ def lancer_formatage():
     with open(OUTPUT_FILE, 'w', encoding='utf-8') as f_out:
         json.dump(output, f_out, ensure_ascii=False, indent=2)
 
-    print(f"\n✨ Succès ! Fichier généré : {OUTPUT_FILE}")
-    print(f"📊 Genres films : {len(films_sorted)} | Genres animés : {len(animes_sorted)}")
+    print(f"\nSuccès ! Fichier généré : {OUTPUT_FILE}")
+    print(f"Genres films : {len(films_sorted)} | Genres animés : {len(animes_sorted)}")
 
 
 if __name__ == "__main__":

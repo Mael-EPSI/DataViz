@@ -93,9 +93,9 @@ def lancer_formatage():
     with open(OUTPUT_FILE, 'w', encoding='utf-8') as f_out:
         json.dump(output, f_out, ensure_ascii=False, indent=2)
 
-    print(f"✅ Films  : {fs['count']} titres | note {fs['note_moy']} | {fs['nb_genres']} genres | {fs['nb_regions']} régions")
-    print(f"✅ Animés : {as_['count']} titres | note {as_['note_moy']} | {as_['nb_genres']} genres | {as_['nb_regions']} régions")
-    print(f"\n✨ Succès ! Fichier généré : {OUTPUT_FILE}")
+    print(f"Films  : {fs['count']} titres | note {fs['note_moy']} | {fs['nb_genres']} genres | {fs['nb_regions']} régions")
+    print(f"Animés : {as_['count']} titres | note {as_['note_moy']} | {as_['nb_genres']} genres | {as_['nb_regions']} régions")
+    print(f"\nSuccès ! Fichier généré : {OUTPUT_FILE}")
 
 if __name__ == "__main__":
     lancer_formatage()

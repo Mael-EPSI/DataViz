@@ -17,13 +17,13 @@ os.makedirs(DATA_CLEAN_DIR, exist_ok=True)
 os.makedirs(data_errors_dir, exist_ok=True)
 
 def lancer_nettoyage():
-    print(f"🧹 Nettoyage des FILMS (Limite : {LIMIT_MOVIES} les plus populaires)...")
+    print(f"Nettoyage des FILMS (Limite : {LIMIT_MOVIES} les plus populaires)...")
     
     all_valid_movies = []
     count_error = 0
 
     if not os.path.exists(FILE_INPUT):
-        print(f"❌ Fichier source introuvable : {FILE_INPUT}")
+        print(f"Fichier source introuvable : {FILE_INPUT}")
         return
 
     # On ouvre le fichier d'erreurs en écriture
@@ -83,9 +83,9 @@ def lancer_nettoyage():
         for movie in limited_movies:
             f_out.write(json.dumps(movie, ensure_ascii=False) + "\n")
 
-    print(f"\n✅ Nettoyage terminé !")
-    print(f"🎬 Films sélectionnés (Top Pop) : {len(limited_movies)}")
-    print(f"❌ Films écartés (Qualité/Date) : {count_error}")
+    print(f"\nNettoyage terminé !")
+    print(f"Films sélectionnés : {len(limited_movies)}")
+    print(f"Films écartés : {count_error}")
 
 if __name__ == "__main__":
     lancer_nettoyage()

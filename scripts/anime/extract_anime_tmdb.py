@@ -60,8 +60,8 @@ def fetch_details(m_type, item_id):
         return None
 
 def run():
-    print(f"🚀 DÉMARRAGE EXTRACTION ANIMÉS (TMDB)")
-    print(f"📂 Destination : {FILENAME}")
+    print(f"DÉMARRAGE EXTRACTION ANIMÉS (TMDB)")
+    print(f"Destination : {FILENAME}")
 
     # On boucle sur 'tv' (Séries) puis 'movie' (Films d'animation)
     for m_type in ['tv', 'movie']:
@@ -82,7 +82,7 @@ def run():
             try:
                 resp = requests.get(discover_url, headers=HEADERS, params=params, timeout=10)
                 if resp.status_code != 200:
-                    print(f"⚠️ Erreur {resp.status_code} à la page {page}")
+                    print(f"Erreur {resp.status_code} à la page {page}")
                     continue
                 
                 results = resp.json().get('results', [])
@@ -101,10 +101,10 @@ def run():
                         # Anti-spam API
                         time.sleep(0.05)
                     
-                    print(f"✅ Page {page}/{MAX_PAGES} ({m_type}) enregistrée.")
+                    print(f"Page {page}/{MAX_PAGES} ({m_type}) enregistrée.")
 
             except Exception as e:
-                print(f"❌ Erreur critique page {page}: {e}")
+                print(f"Erreur critique page {page}: {e}")
                 time.sleep(5)
 
 if __name__ == "__main__":

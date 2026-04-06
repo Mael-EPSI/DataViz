@@ -18,7 +18,7 @@ def charger_elements(filepath, pop_key):
     """Charge les items et retourne un dict année → liste de (note, popularite)."""
     per_year = {y: [] for y in YEARS}
     if not os.path.exists(filepath):
-        print(f"❌ Fichier introuvable : {filepath}")
+        print(f"Fichier introuvable : {filepath}")
         return per_year
     with open(filepath, 'r', encoding='utf-8') as f:
         for line in f:
@@ -82,14 +82,14 @@ def lancer_formatage():
     films_note, films_pop, films_count = calculer_stats(films_per_year)
     films_pop_norm = normaliser(films_pop)
     films_score    = calculer_score(films_note, films_pop_norm)
-    print(f"✅ Films traités.")
+    print(f"Films traités.")
 
     # --- Animés (population = audience AniList) ---
     animes_per_year = charger_elements(FILE_ANIME, 'popularite_tmdb')
     animes_note, animes_pop, animes_count = calculer_stats(animes_per_year)
     animes_pop_norm = normaliser(animes_pop)
     animes_score    = calculer_score(animes_note, animes_pop_norm)
-    print(f"✅ Animés traités.")
+    print(f"Animés traités.")
 
     output = {
         "labels": YEARS,
@@ -110,7 +110,7 @@ def lancer_formatage():
     with open(OUTPUT_FILE, 'w', encoding='utf-8') as f_out:
         json.dump(output, f_out, ensure_ascii=False, indent=2)
 
-    print(f"\n✨ Succès ! Fichier généré : {OUTPUT_FILE}")
+    print(f"\nSuccès ! Fichier généré : {OUTPUT_FILE}")
 
 if __name__ == "__main__":
     lancer_formatage()

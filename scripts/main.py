@@ -21,30 +21,30 @@ def verifier_dossiers():
     for d in DATA_DIRS:
         if not os.path.exists(d):
             os.makedirs(d)
-            print(f"📁 Création du dossier : {d}")
+            print(f"Création du dossier : {d}")
 
 def executer_etape(relative_path, description):
     """Exécute un sous-script Python"""
     script_path = os.path.join(BASE_DIR, relative_path)
-    print(f"\n--- ⏳ {description.upper()} ---")
+    print(f"\n--- {description.upper()} ---")
     
     if not os.path.exists(script_path):
-        print(f"❌ ERREUR : Impossible de trouver {script_path}")
+        print(f"erreur : Impossible de trouver {script_path}")
         return False
 
     try:
         # On utilise sys.executable pour être sûr d'utiliser le même Python
         subprocess.run([sys.executable, script_path], check=True)
-        print(f"✅ {description} terminée.")
+        print(f"{description} terminée.")
         return True
     except subprocess.CalledProcessError as e:
-        print(f"💥 ERREUR CRITIQUE lors de {description} : {e}")
+        print(f"erreur grave lors de {description} : {e}")
         return False
 
 def principal():
     start_time = time.time()
     print("==========================================")
-    print("🚀 DÉMARRAGE DU PIPELINE ETL AUTOMATISÉ")
+    print("ETL")
     print("==========================================")
     
     verifier_dossiers()
@@ -86,9 +86,8 @@ def principal():
     duration = round(end_time - start_time, 2)
     
     print("\n==========================================")
-    print(f"✨ PIPELINE TERMINÉ AVEC SUCCÈS")
-    print(f"⏱️  Durée totale : {duration} secondes")
-    print(f"📂 Prêt pour affichage : web/info.html")
+    print(f"PIPELINE TERMINÉ AVEC SUCCÈS")
+    print(f"temps total : {duration} secondes")
     print("==========================================")
 
 if __name__ == "__main__":

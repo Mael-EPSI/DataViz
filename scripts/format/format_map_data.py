@@ -28,7 +28,7 @@ def lancer_formatage():
                         item["population"] = 0
                     final_data.append(item)
                 except: continue
-        print(f"✅ Films intégrés.")
+        print(f"Films intégrés.")
 
     # 2. Traitement des ANIMÉS
     if os.path.exists(FILE_ANIME):
@@ -40,15 +40,15 @@ def lancer_formatage():
                     # La région est déjà fixée à "JP" dans ton clean_anime
                     final_data.append(item)
                 except: continue
-        print(f"✅ Animés intégrés.")
+        print(f"Animés intégrés.")
 
     # 3. Écriture du fichier JSON final (Tableau d'objets)
     with open(OUTPUT_FILE, 'w', encoding='utf-8') as f_out:
         # indent=2 est important pour que tu puisses vérifier le fichier à l'oeil nu
         json.dump(final_data, f_out, ensure_ascii=False, indent=2)
 
-    print(f"\n✨ Succès ! Fichier généré : {OUTPUT_FILE}")
-    print(f"📊 Nombre total d'entrées : {len(final_data)}")
+    print(f"\nSuccès ! Fichier généré : {OUTPUT_FILE}")
+    print(f"Nombre total d'entrées : {len(final_data)}")
 
 if __name__ == "__main__":
     lancer_formatage()
